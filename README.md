@@ -1,14 +1,18 @@
-# hyundai-customer-analytics
 # 🚙 Hyundai Customer Insights & QA Analytics Pro
 
-Bu proje, Hyundai modellerine (Elantra, Accent, Tucson, Sonata, Santa Fe, Azera) ait **8.200'den fazla gerçek müşteri geri bildirimini** analiz ederek kronik üretim hatalarını, müşteri memnuniyet eğilimlerini ve model performanslarını takip etmek için geliştirilmiş bir **Müşteri Deneyimi (CX) ve Kalite Güvence Karar Destek Sistemidir**.
+This project is a **Customer Experience (CX) and Quality Assurance Decision Support System** developed to track chronic production defects, customer satisfaction trends, and model performances by analyzing **more than 8,200 real customer feedbacks** belonging to Hyundai models (Elantra, Accent, Tucson, Sonata, Santa Fe, Azera).
 
-## 🚀 Canlı Uygulama Bağlantısı
-Uygulamayı doğrudan tarayıcınızda test etmek için tıklayın: [BURAYA_STREAMLIT_CANLI_LINKINI_YAPISTIR]
+## 🚀 Live Application
+Test the application directly in your browser: [Hyundai Customer Analytics App](https://hyundai-customer-analytics.streamlit.app/)
 
-## 🎯 Projenin Öne Çıkan Özellikleri
-- **Scroll-Free Yönetici Özeti:** Sayfayı aşağı kaydırmadan tüm kritik metriklere, avantajlara, dezavantajlara ve aksiyon planlarına tek ekrandan erişim.
-- **QA Alert (Kalite Güvence Uyarısı):** Filtrelenen veri kümesinde negatif geri bildirim oranı %20'yi aştığında sistem otomatik olarak bir Kalite Güvence uyarısı tetikler ve kök neden analizi talep eder.
-- **Hafif Morfolojik Örüntü Sınıflandırıcısı:** Bilgisayarı yoracak büyük kütüphaneleri (2 GB) bypass eden, kelimelerin kök ve ek morfolojisine odaklanarak "-medim", "-madı", "değil", "yok" gibi olumsuzluk yapılarını (Negation Handling) saliseler içinde çözen ve anlamsız rastgele harf dizilimlerini ayırt edebilen akıllı algoritma.
-- **Gelişmiş Veri Optimizasyonu:** Üretim yılı, araç modeli ve ham kelime aramalarına göre gerçek zamanlı dinamik filtreleme ve yorum sıralama seçenekleri.
+## 🎯 Key Features & Project Highlights
 
+*   **Scroll-Free Executive Summary:** Access all critical metrics, pros, cons, and strategic action plans on a single screen without needing to scroll down.
+*   **QA Alert (Quality Assurance Warning):** The system automatically triggers a Quality Assurance alert and requests a root-cause analysis whenever the negative feedback rate exceeds the 20% threshold within the filtered dataset.
+*   **Lightweight Morphological Pattern Classifier:** A smart, tailored algorithm designed to bypass heavy libraries (~2 GB). It focuses on word roots and suffixes to handle negation (such as detecting Turkish negative structures like "-medim", "-madı", "değil", "yok") within milliseconds, while successfully filtering out random/meaningless character strings.
+*   **Advanced Data Optimization:** Real-time dynamic filtering and comment-sorting options based on manufacturing year, vehicle model, and raw keyword searches.
+
+## 🛠️ Tech Stack & Tools
+*   **Frontend & Deployment:** Streamlit
+*   **Data Manipulation & Analytics:** Python (Pandas, NumPy)
+*   **Text Processing:** Custom Morphological NLP Logic / Regular Expressions (Regex)
