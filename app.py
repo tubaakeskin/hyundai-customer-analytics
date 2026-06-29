@@ -6,8 +6,8 @@ import os
 # --- High-Speed Machine Learning & Visualization Libraries ---
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split  # Added for train-test split
-from sklearn.metrics import accuracy_score  # Added to calculate real model metrics
+from sklearn.model_selection import train_test_split  
+from sklearn.metrics import accuracy_score  
 import plotly.express as px  
 
 # 1. Page Configuration & Advanced Dark Theme Design (CSS)
@@ -122,14 +122,14 @@ def train_fast_model(_df):
     X = vectorizer.fit_transform(train_df['Review'])
     y = train_df['Label']
     
-    # NEW: Applying 80% Train and 20% Test Split with a fixed random state for reproducibility
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_test_split=0.2, random_state=42)
+    # FIXED: Changed test_test_split to test_size
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
     # Training the Logistic Regression model on the training partition
     model = LogisticRegression(C=1.0, max_iter=200)
     model.fit(X_train, y_train)
     
-    # NEW: Calculating the validation accuracy score using the test partition
+    # Calculating the validation accuracy score using the test partition
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     
@@ -137,7 +137,6 @@ def train_fast_model(_df):
 
 try:
     df = load_data()
-    # Vectorizer, ML Model, and Validation Accuracy are generated instantly
     vectorizer, ml_model, model_accuracy = train_fast_model(df) 
 
     # 4. Sidebar - Logo and Filters
@@ -233,7 +232,7 @@ try:
             
             fallbacks = [
                 f"Minor tech or component wear patterns reported in older {selected_model} models",
-                f"Standard cabin insulation updates suggested by long-term {selected_model} owners",
+                f"Standard cabin insulation updates suggested by long-term {selected_model} models",
                 f"Routine maintenance costs aligned with mid-size vehicle segment standards"
             ]
             for fallback in fallbacks:
@@ -351,7 +350,6 @@ try:
                 
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("##### 💡 Industrial Engineering & Data Science Note:")
-            # Updated the note to dynamically showcase the validation accuracy computed on the test partition
             st.info(f"This prototype utilizes a **TF-IDF + Logistic Regression** model pipeline. The data pipeline is split rigorously using an **80% Train and 20% Test** schema, achieving a certified validation accuracy of **%{model_accuracy*100:.2f}** on unseen test partitions.")
 
 except FileNotFoundError:
