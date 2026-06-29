@@ -6,6 +6,8 @@ import os
 # --- High-Speed Machine Learning & Visualization Libraries ---
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split  # Added for train-test split
+from sklearn.metrics import accuracy_score  # Added to calculate real model metrics
 import plotly.express as px  
 
 # 1. Page Configuration & Advanced Dark Theme Design (CSS)
@@ -48,8 +50,8 @@ st.markdown("""
         width: 100% !important;
     }
     .stButton>button:hover {
-        background-color: #00aad2 !important;
-        color: #001529 !important;
+        background-color: #001529 !important;
+        color: #00aad2 !important;
         border: 1px solid #00aad2 !important;
     }
     
@@ -109,24 +111,34 @@ def load_data():
     df['Model_Group'] = df['Vehicle_Title'].apply(extract_model)
     return df
 
-# --- Background Machine Learning Model Training Function ---
+# --- Background Machine Learning Model Training Function with Train-Test Split ---
 @st.cache_resource
 def train_fast_model(_df):
     train_df = _df.dropna(subset=['Review', 'Rating']).copy()
     train_df['Label'] = train_df['Rating'].apply(lambda x: 1 if x >= 4.0 else 0)
     
+    # Text Vectorization
     vectorizer = TfidfVectorizer(max_features=2500, stop_words='english', ngram_range=(1,2))
     X = vectorizer.fit_transform(train_df['Review'])
     y = train_df['Label']
     
-    model = LogisticRegression(C=1.0, max_iter=200)
-    model.fit(X, y)
+    # NEW: Applying 80% Train and 20% Test Split with a fixed random state for reproducibility
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_test_split=0.2, random_state=42)
     
-    return vectorizer, model
+    # Training the Logistic Regression model on the training partition
+    model = LogisticRegression(C=1.0, max_iter=200)
+    model.fit(X_train, y_train)
+    
+    # NEW: Calculating the validation accuracy score using the test partition
+    y_pred = model.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    
+    return vectorizer, model, acc
 
 try:
     df = load_data()
-    vectorizer, ml_model = train_fast_model(df) 
+    # Vectorizer, ML Model, and Validation Accuracy are generated instantly
+    vectorizer, ml_model, model_accuracy = train_fast_model(df) 
 
     # 4. Sidebar - Logo and Filters
     with st.sidebar:
@@ -148,7 +160,7 @@ try:
         search_query = st.text_input("🔍 Search Keyword (e.g. engine, fuel, seat)", "")
 
         st.sidebar.markdown("### ⚡ Quick Topic Filters")
-        col_b1, col_b2 = st.columns(2)
+        col_b1, col_b2 = st.sidebar.columns(2)
         with col_b1:
             if st.button("🔧 Engine"): search_query = "engine"
             if st.button("🛑 Brakes"): search_query = "brake"
@@ -317,7 +329,7 @@ try:
         else:
             st.warning("⚠️ No reviews found matching the selected filters.")
 
-    # --- TAB 2: LIVE ML PREDICTION ENGINE ---
+    # --- TAB 2: LIVE ML PREDICTION ENGINE WITH TRAIN-TEST METRICS ---
     with tab2:
         st.markdown("<h2>🤖 Live Sentiment Classification Engine (TF-IDF + Logistic Regression)</h2>", unsafe_allow_html=True)
         st.markdown("<p style='color: #a3b8cc;'>Type any English customer review below to test the ultra-fast statistical model in real-time.</p>", unsafe_allow_html=True)
@@ -339,7 +351,8 @@ try:
                 
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("##### 💡 Industrial Engineering & Data Science Note:")
-            st.info("This prototype utilizes a **TF-IDF + Logistic Regression** model pipeline trained directly on the vehicle dataset. By reducing neural network overhead, it achieves instant prediction speed suitable for agile decision-making systems.")
+            # Updated the note to dynamically showcase the validation accuracy computed on the test partition
+            st.info(f"This prototype utilizes a **TF-IDF + Logistic Regression** model pipeline. The data pipeline is split rigorously using an **80% Train and 20% Test** schema, achieving a certified validation accuracy of **%{model_accuracy*100:.2f}** on unseen test partitions.")
 
 except FileNotFoundError:
     st.error("Please ensure 'Scraped_Car_Review_hyundai.csv' is in the same directory as this script.")
