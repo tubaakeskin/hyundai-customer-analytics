@@ -179,9 +179,8 @@ try:
                 # --- DİNAMİK AVANTAJ ANALİZİ (Frekans Tabanlı) ---
                 adv_keywords = {
                     "Ride Comfort & Interior Ergonomics": ["comfort", "comfortable", "seat", "spacious", "interior", "cabin"],
-                    "Steady Fuel Efficiency": ["mileage", "fuel", "economy", "gas", "mpg", "efficient"],
-                    "High Price-to-Performance Value": ["price", "value", "worth", "cheap", "affordable", "deal"],
-                    "Smooth Handling & Driving Experience": ["smooth", "handling", "drive", "steering", "wheel", "power"]
+                    "Steady Fuel Efficiency over long-term usage": ["mileage", "fuel", "economy", "gas", "mpg", "efficient"],
+                    "High price-to-performance value compared to market peers": ["price", "value", "worth", "cheap", "affordable", "deal"]
                 }
                 
                 adv_scores = {}
@@ -200,10 +199,9 @@ try:
 
                 # --- DİNAMİK DEZAVANTAJ ANALİZİ (Frekans Tabanlı) ---
                 disadv_keywords = {
-                    "Highway Cabin Noise & Insulation Limits": ["noise", "loud", "wind", "sound", "noisy", "insulation"],
-                    "Early Brake Wear Patterns": ["brake", "brakes", "stopping", "wear"],
-                    "Suspension Stiffness on Uneven Terrains": ["suspension", "bumpy", "rough", "ride", "stiff", "shock"],
-                    "Interior Plastic Component Wear": ["plastic", "interior", "cheap", "rattle", "dashboard", "scratch"]
+                    "Highway cabin noise (wind/road insulation limits)": ["noise", "loud", "wind", "sound", "noisy", "insulation"],
+                    "Early brake wear patterns reported by standard city drivers": ["brake", "brakes", "stopping", "wear"],
+                    "Suspension stiffness noted on uneven terrains": ["suspension", "bumpy", "rough", "ride", "stiff", "shock"]
                 }
                 
                 disadv_scores = {}
