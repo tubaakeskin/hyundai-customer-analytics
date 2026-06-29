@@ -9,11 +9,11 @@ st.set_page_config(page_title="Hyundai Customer Analytics", page_icon="🚙", la
 st.markdown("""
     <style>
     .stApp { background-color: #001529 !important; }
-    [data-testid=\"stSidebar\"] { background-color: #002c5f !important; }
-    [data-testid=\"stSidebar\"] p, [data-testid=\"stSidebar\"] label, [data-testid=\"stSidebar\"] h2, [data-testid=\"stSidebar\"] h3 {
+    [data-testid="stSidebar"] { background-color: #002c5f !important; }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
         color: #ffffff !important;
     }
-    div[data-testid=\"stMetricSimpleWidget\"] {
+    div[data-testid="stMetricSimpleWidget"] {
         background-color: #002140 !important;
         border: 1px solid #003a70;
         padding: 20px;
@@ -21,8 +21,8 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         border-left: 6px solid #00aad2;
     }
-    div[data-testid=\"stMetricSimpleWidget\"] label { color: #a3b8cc !important; font-weight: bold; }
-    div[data-testid=\"stMetricSimpleWidget\"] div[data-testid=\"stMetricValue\"] { color: #ffffff !important; }
+    div[data-testid="stMetricSimpleWidget"] label { color: #a3b8cc !important; font-weight: bold; }
+    div[data-testid="stMetricSimpleWidget"] div[data-testid="stMetricValue"] { color: #ffffff !important; }
     
     .insight-card {
         background-color: #002140 !important;
@@ -48,13 +48,22 @@ st.markdown("""
     }
     
     /* Sekme (Tabs) başlık renklerini beyaz yapma */
-    button[data-baseweb=\"tab\"] p {
+    button[data-baseweb="tab"] p {
         color: #a3b8cc !important;
         font-size: 16px !important;
     }
-    button[aria-selected=\"true\"] p {
+    button[aria-selected="true"] p {
         color: #00aad2 !important;
         font-weight: bold !important;
+    }
+    
+    /* Logoyu ortalamak için kapsayıcı stil */
+    .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -97,30 +106,33 @@ def load_data():
 try:
     df = load_data()
 
-    # 4. Sol Menü - Logo ve Filtreler (Küçük Boyut Ayarı Yapıldı)
-    if os.path.exists('hyundai_logo.jpg'): st.sidebar.image('hyundai_logo.jpg', width=150)
-    elif os.path.exists('hyundai_logo.jpeg'): st.sidebar.image('hyundai_logo.jpeg', width=150)
-    elif os.path.exists('hyundai_logo.png'): st.sidebar.image('hyundai_logo.png', width=150)
-    else: st.sidebar.markdown("<h2 style='color: #00aad2; text-align: center;'>HYUNDAI</h2>", unsafe_allow_html=True)
+    # 4. Sol Menü - Logo ve Filtreler (HTML div ile tam ortalandı)
+    with st.sidebar:
+        st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+        if os.path.exists('hyundai_logo.jpg'): st.image('hyundai_logo.jpg', width=150)
+        elif os.path.exists('hyundai_logo.jpeg'): st.image('hyundai_logo.jpeg', width=150)
+        elif os.path.exists('hyundai_logo.png'): st.image('hyundai_logo.png', width=150)
+        else: st.markdown("<h2 style='color: #00aad2; text-align: center;'>HYUNDAI</h2>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-    st.sidebar.markdown("## 🎛️ Control Panel")
-    selected_model = st.sidebar.selectbox("Select Vehicle Model", df['Model_Group'].unique())
-    
-    min_year = int(df['Model_Year'].min())
-    max_year = int(df['Model_Year'].max())
-    selected_years = st.sidebar.slider("Select Model Year Range", min_year, max_year, (min_year, max_year))
-    
-    search_query = st.sidebar.text_input("🔍 Search Keyword (e.g. engine, fuel, seat)", "")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("## 🎛️ Control Panel")
+        selected_model = st.selectbox("Select Vehicle Model", df['Model_Group'].unique())
+        
+        min_year = int(df['Model_Year'].min())
+        max_year = int(df['Model_Year'].max())
+        selected_years = st.slider("Select Model Year Range", min_year, max_year, (min_year, max_year))
+        
+        search_query = st.text_input("🔍 Search Keyword (e.g. engine, fuel, seat)", "")
 
-    st.sidebar.markdown("### ⚡ Quick Topic Filters")
-    col_b1, col_b2 = st.sidebar.columns(2)
-    with col_b1:
-        if st.button("🔧 Engine"): search_query = "engine"
-        if st.button("🛑 Brakes"): search_query = "brake"
-    with col_b2:
-        if st.button("🛋️ Comfort"): search_query = "comfort"
-        if st.button("⛽ Fuel"): search_query = "fuel"
+        st.markdown("### ⚡ Quick Topic Filters")
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.button("🔧 Engine"): search_query = "engine"
+            if st.button("🛑 Brakes"): search_query = "brake"
+        with col_b2:
+            if st.button("🛋️ Comfort"): search_query = "comfort"
+            if st.button("⛽ Fuel"): search_query = "fuel"
 
     # Filtreleri Uygulama
     filtered_df = df[
