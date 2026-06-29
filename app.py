@@ -3,6 +3,10 @@ import streamlit as st
 import re
 import os
 
+# --- YENİ: NLP Modeli için gerekli kütüphaneyi çağırıyoruz ---
+# Not: Eğer hata alırsan GitHub'daki requirements.txt dosyana 'transformers' ve 'torch' eklemelisin.
+from transformers import pipeline
+
 # 1. Sayfa Ayarları ve Gelişmiş Karanlık Tema Tasarımı (CSS)
 st.set_page_config(page_title="Hyundai Customer Analytics", page_icon="🚙", layout="wide")
 
@@ -104,8 +108,15 @@ def load_data():
     df['Model_Group'] = df['Vehicle_Title'].apply(extract_model)
     return df
 
+# --- YENİ: NLP Modelini Cache'leyerek Yükleyen Fonksiyon ---
+@st.cache_resource
+def load_nlp_model():
+    # DistilBERT tabanlı hafif ve çok güçlü bir duygu analizi modeli çağırıyoruz
+    return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+
 try:
     df = load_data()
+    classifier = load_nlp_model() # Modeli hafızaya alıyoruz
 
     # 4. Sol Menü - Logo ve Filtreler
     with st.sidebar:
@@ -198,8 +209,7 @@ try:
                 if fallback not in disadv_list: disadv_list.append(fallback)
                 else: disadv_list.append("Minor electronic sensor reset requirements")
 
-            # --- TEK BAKIŞTA ÜST PANEL (KPI'LAR ve DİNAMİK KUTULAR) ---
-            # Ekranı 3 ana sütuna bölüyoruz: KPI'lar, Avantajlar, Dezavantajlar
+            # --- TEK BAKIŞTA ÜST PANEL ---
             main_col1, main_col2, main_col3 = st.columns([1, 1.2, 1.2])
             
             with main_col1:
@@ -210,13 +220,11 @@ try:
                 
             with main_col2:
                 st.markdown("<h4 style='margin-bottom:10px; color:#00aad2;'>🟢 Top Advantages</h4>", unsafe_allow_html=True)
-                for i, adv in enumerate(adv_list[:3], 1): 
-                    st.success(f"**{adv}**")
+                for i, adv in enumerate(adv_list[:3], 1): st.success(f"**{adv}**")
                     
             with main_col3:
                 st.markdown("<h4 style='margin-bottom:10px; color:#ff4b4b;'>🔴 Top Disadvantages</h4>", unsafe_allow_html=True)
-                for i, disadv in enumerate(disadv_list[:3], 1): 
-                    st.error(f"**{disadv}**")
+                for i, disadv in enumerate(disadv_list[:3], 1): st.error(f"**{disadv}**")
 
             # --- AŞAĞI KAYDIRILDIĞINDA GÖRÜLECEK DETAYLAR ALANI ---
             st.markdown("<br><hr><br>", unsafe_allow_html=True)
@@ -250,33 +258,31 @@ try:
         else:
             st.warning("⚠️ No reviews found matching the selected filters.")
 
-    # --- SEKME 2: CANLI AI TAHMİN MOTORU ---
+    # --- SEKME 2: YENİLENEN GERÇEK NLP TAHMİN MOTORU ---
     with tab2:
-        st.markdown("<h2>🤖 Live Sentiment Classification Engine</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #a3b8cc;'>Type any English customer review below to test the rule-based AI classification model in real-time.</p>", unsafe_allow_html=True)
+        st.markdown("<h2>🤖 Live Sentiment Classification Engine (BERT tabanlı)</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #a3b8cc;'>Type any English customer review below to test the **Transformer NLP model** in real-time.</p>", unsafe_allow_html=True)
         
         user_input = st.text_area("✍️ Enter Customer Review (In English):", "The handling of this vehicle is smooth and the interior is incredibly comfortable, but the engine noise at high speeds is slightly annoying.")
         
         if user_input:
             st.markdown("### 🔍 Model Analysis Results")
             
-            positive_words = ['good', 'great', 'amazing', 'excellent', 'love', 'perfect', 'comfortable', 'comfort', 'smooth', 'reliable', 'best', 'nice', 'spacious']
-            negative_words = ['bad', 'worst', 'junk', 'noise', 'loud', 'bumpy', 'rough', 'expensive', 'broke', 'fail', 'problem', 'defect', 'annoying', 'stiff', 'waste']
+            # NLP model tahmini gerçekleştiriliyor
+            with st.spinner("NLP modeli metni analiz ediyor..."):
+                result = classifier(user_input)[0]
+                label = result['label']      # POSITIVE veya NEGATIVE döner
+                confidence = result['score']  # Güven skoru (0.0 - 1.0 arası)
             
-            tokens = user_input.lower().split()
-            pos_score = sum(1 for token in tokens if any(p in token for p in positive_words))
-            neg_score = sum(1 for token in tokens if any(n in token for n in negative_words))
-            
-            if pos_score > neg_score:
-                st.success(f"🟢 **Predicted Sentiment: POSITIVE** (Matches: +{pos_score} positive terms, -{neg_score} negative terms)")
-            elif neg_score > pos_score:
-                st.error(f"🔴 **Predicted Sentiment: NEGATIVE** (Matches: +{pos_score} positive terms, -{neg_score} negative terms)")
+            # Çıktıyı görselleştirme
+            if label == "POSITIVE":
+                st.success(f"🟢 **Predicted Sentiment: POSITIVE** (Confidence Score: %{confidence*100:.2f})")
             else:
-                st.warning(f"🟡 **Predicted Sentiment: NEUTRAL** (Balanced tone: +{pos_score} positive terms, -{neg_score} negative terms)")
+                st.error(f"🔴 **Predicted Sentiment: NEGATIVE** (Confidence Score: %{confidence*100:.2f})")
                 
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("##### 💡 Industrial Engineering Note:")
-            st.info("This prototype utilizes a lexicographical token-weighting classifier to bypass heavy memory overhead, ensuring instantaneous execution on light cloud infrastructure.")
+            st.markdown("##### 💡 Industrial Engineering & Data Science Note:")
+            st.info("This prototype utilizes **DistilBERT (SST-2)** via Hugging Face. Unlike rule-based regex models, it contextualizes linguistic nuances, negation structures (e.g., 'not good'), and semantic dependencies instantaneously.")
 
 except FileNotFoundError:
     st.error("Please ensure 'Scraped_Car_Review_hyundai.csv' is in the same directory as this script.")
