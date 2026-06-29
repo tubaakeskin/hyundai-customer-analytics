@@ -62,13 +62,23 @@ st.markdown("""
         font-weight: bold !important;
     }
     
-    /* Logoyu ortalamak için kapsayıcı */
+    /* YENİ: Streamlit sidebar içindeki resmi ortalamayı garanti eden esnek hizalama yapısı */
+    [data-testid="stSidebar"] [data-testid="stImage"] {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        text-align: center !important;
+    }
+    
     .logo-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        margin-bottom: 10px;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+        width: 100% !important;
+        margin: 0 auto 10px auto !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -127,7 +137,7 @@ try:
     df = load_data()
     vectorizer, ml_model = train_fast_model(df) 
 
-    # 4. Sol Menü - Logo ve Filtreler
+    # 4. Sol Menü - Logo ve Filtreler (Gelişmiş CSS Ortalama Yapısı Eklendi)
     with st.sidebar:
         st.markdown('<div class="logo-container">', unsafe_allow_html=True)
         if os.path.exists('hyundai_logo.jpg'): st.image('hyundai_logo.jpg', width=150)
