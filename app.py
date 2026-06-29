@@ -3,9 +3,10 @@ import streamlit as st
 import re
 import os
 
-# --- Yüksek Hızlı Makine Öğrenmesi için Gerekli Kütüphaneler ---
+# --- Yüksek Hızlı Makine Öğrenmesi ve Grafik Kütüphaneleri ---
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+import plotly.express as px  # Yeni eklenen grafik kütüphanesi
 
 # 1. Sayfa Ayarları ve Gelişmiş Karanlık Tema Tasarımı (CSS)
 st.set_page_config(page_title="Hyundai Customer Analytics", page_icon="🚙", layout="wide")
@@ -62,23 +63,13 @@ st.markdown("""
         font-weight: bold !important;
     }
     
-    /* YENİ: Streamlit sidebar içindeki resmi ortalamayı garanti eden esnek hizalama yapısı */
-    [data-testid="stSidebar"] [data-testid="stImage"] {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-        text-align: center !important;
-    }
-    
+    /* Logoyu ortalamak için kapsayıcı */
     .logo-container {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        text-align: center !important;
-        width: 100% !important;
-        margin: 0 auto 10px auto !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -137,7 +128,7 @@ try:
     df = load_data()
     vectorizer, ml_model = train_fast_model(df) 
 
-    # 4. Sol Menü - Logo ve Filtreler (Gelişmiş CSS Ortalama Yapısı Eklendi)
+    # 4. Sol Menü - Logo ve Filtreler
     with st.sidebar:
         st.markdown('<div class="logo-container">', unsafe_allow_html=True)
         if os.path.exists('hyundai_logo.jpg'): st.image('hyundai_logo.jpg', width=150)
@@ -230,7 +221,7 @@ try:
             
             fallbacks = [
                 f"Minor tech or component wear patterns reported in older {selected_model} models",
-                f"Standard cabin insulation updates suggested by long-term {selected_model} owners",
+                f"Standard cabin insulation updates suggested by long-term {selected_model} models",
                 f"Routine maintenance costs aligned with mid-size vehicle segment standards"
             ]
             for fallback in fallbacks:
@@ -272,7 +263,49 @@ try:
                 st.markdown("<h3>🤝 Common User Consensus (Ortak Görüş)</h3>", unsafe_allow_html=True)
                 st.info(f"Analysis for {selected_model} models between {selected_years[0]} and {selected_years[1]} indicates a customer satisfaction rate aligned with an advantage score of {advantage_score}/100.")
 
+            # --- YENİ: INTERAKTIF CHART ALANI (PLOTLY KORUNUMU) ---
+            st.markdown("<br><hr><br>", unsafe_allow_html=True)
+            st.markdown("<h2>📈 Advanced Visual Analytics (Görsel Analitik)</h2>", unsafe_allow_html=True)
+            
+            chart_col1, chart_col2 = st.columns(2)
+            
+            with chart_col1:
+                st.markdown("### ⭐ Rating Distribution")
+                # Puanların dağılımını gösteren bar grafiği
+                rating_counts = filtered_df['Rating'].value_counts().reset_index()
+                rating_counts.columns = ['Rating', 'Count']
+                rating_counts = rating_counts.sort_values(by='Rating')
+                
+                fig_rating = px.bar(rating_counts, x='Rating', y='Count', 
+                                    labels={'Rating': 'User Rating', 'Count': 'Number of Reviews'},
+                                    template='plotly_dark', color_discrete_sequence=['#00aad2'])
+                fig_rating.update_layout(paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
+                st.plotly_chart(fig_rating, use_container_width=True)
+
+            with chart_col2:
+                st.markdown("### 📅 Satisfaction Trend by Years")
+                # Yıllara göre ortalama memnuniyet trendi
+                yearly_trend = filtered_df.groupby('Model_Year')['Rating'].mean().reset_index()
+                
+                fig_trend = px.line(yearly_trend, x='Model_Year', y='Rating', markers=True,
+                                    labels={'Model_Year': 'Model Year', 'Rating': 'Average Rating'},
+                                    template='plotly_dark', color_discrete_sequence=['#ff4b4b'])
+                fig_trend.update_layout(paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
+                st.plotly_chart(fig_trend, use_container_width=True)
+                
+            # Model Karşılaştırma Grafiği (Tüm Portföyü Kıyaslar)
             st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("### 🚗 Model Comparison Across Portfolio (Tüm Modellerin Kıyaslaması)")
+            model_comp = df.groupby('Model_Group')['Rating'].mean().reset_index().sort_values(by='Rating', ascending=True)
+            
+            fig_model = px.bar(model_comp, x='Rating', y='Model_Group', orientation='h',
+                               labels={'Rating': 'Average Rating', 'Model_Group': 'Vehicle Model'},
+                               template='plotly_dark', color='Rating', color_continuous_scale='Blues')
+            fig_model.update_layout(paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
+            st.plotly_chart(fig_model, use_container_width=True)
+
+            # --- Müşteri Yorumları ---
+            st.markdown("<br><hr><br>", unsafe_allow_html=True)
             st.markdown("<h3>💬 Filtered Raw Customer Voices (Müşteri Yorumları)</h3>", unsafe_allow_html=True)
             for idx, row in filtered_df.head(4).iterrows():
                 status_color = "🟢 Positive" if row['Rating'] >= 4.0 else ("🟡 Neutral" if row['Rating'] == 3.0 else "🔴 Negative")
