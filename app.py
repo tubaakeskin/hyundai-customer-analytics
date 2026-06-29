@@ -16,13 +16,14 @@ st.markdown("""
     div[data-testid="stMetricSimpleWidget"] {
         background-color: #002140 !important;
         border: 1px solid #003a70;
-        padding: 20px;
+        padding: 15px;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         border-left: 6px solid #00aad2;
+        margin-bottom: 10px;
     }
     div[data-testid="stMetricSimpleWidget"] label { color: #a3b8cc !important; font-weight: bold; }
-    div[data-testid="stMetricSimpleWidget"] div[data-testid="stMetricValue"] { color: #ffffff !important; }
+    div[data-testid="stMetricSimpleWidget"] div[data-testid="stMetricValue"] { color: #ffffff !important; font-size: 24px !important; }
     
     .insight-card {
         background-color: #002140 !important;
@@ -47,7 +48,7 @@ st.markdown("""
         border: 1px solid #00aad2 !important;
     }
     
-    /* Sekme (Tabs) başlık renklerini beyaz yapma */
+    /* Sekme (Tabs) başlık renkleri */
     button[data-baseweb="tab"] p {
         color: #a3b8cc !important;
         font-size: 16px !important;
@@ -57,7 +58,7 @@ st.markdown("""
         font-weight: bold !important;
     }
     
-    /* Logoyu ortalamak için kapsayıcı stil */
+    /* Logoyu ortalamak için kapsayıcı */
     .logo-container {
         display: flex;
         justify-content: center;
@@ -70,7 +71,7 @@ st.markdown("""
 
 # 2. Üst Banner Alanı
 st.markdown("<h1 style='color: #ffffff; font-family: Arial, sans-serif; margin-bottom: 0;'>🚙 HYUNDAI CUSTOMER INSIGHTS</h1>", unsafe_allow_html=True)
-st.markdown("<p style='color: #00aad2; margin-top: 5px; font-size: 16px;'>Data-Driven Vehicle Evaluation & Performance Platform</p>", unsafe_allow_html=True)
+st.markdown("<p style='color: #00aad2; margin-top: 5px; font-size: 14px;'>Data-Driven Vehicle Evaluation & Performance Platform</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # 3. Veri Yükleme ve Akıllı Ön İşleme Fonksiyonu
@@ -106,7 +107,7 @@ def load_data():
 try:
     df = load_data()
 
-    # 4. Sol Menü - Logo ve Filtreler (HTML div ile tam ortalandı)
+    # 4. Sol Menü - Logo ve Filtreler
     with st.sidebar:
         st.markdown('<div class="logo-container">', unsafe_allow_html=True)
         if os.path.exists('hyundai_logo.jpg'): st.image('hyundai_logo.jpg', width=150)
@@ -116,7 +117,7 @@ try:
         st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("## 🎛️ Control Panel")
+        st.sidebar.markdown("## 🎛️ Control Panel")
         selected_model = st.selectbox("Select Vehicle Model", df['Model_Group'].unique())
         
         min_year = int(df['Model_Year'].min())
@@ -161,19 +162,69 @@ try:
         else:
             avg_rating, advantage_score, pos_rate, neg_rate, neu_rate = 0, 0, 0, 0, 0
 
-        col1, col2, col3 = st.columns(3)
-        with col1: st.metric(label="📊 Filtered Experiences", value=f"{total_reviews:,}")
-        with col2: st.metric(label="⭐ Avg User Rating (5)", value=f"{avg_rating:.2f} / 5.0" if total_reviews > 0 else "N/A")
-        with col3: st.metric(label="🏆 Vehicle Advantage Score", value=f"{advantage_score} / 100" if total_reviews > 0 else "N/A")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
         if total_reviews > 0:
-            st.markdown(f"<h2>🎯 Executive Summary for {selected_model}</h2>", unsafe_allow_html=True)
-            summary_col1, summary_col2 = st.columns(2)
+            all_text = " ".join(filtered_df['Review'].astype(str)).lower()
             
+            # --- DİNAMİK AVANTAJ / DEZAVANTAJ HESAPLAMA MANTIĞI ---
+            adv_keywords = {
+                "Ride Comfort & Interior Ergonomics": ["comfort", "comfortable", "seat", "spacious", "interior", "cabin"],
+                "Steady Fuel Efficiency over long-term usage": ["mileage", "fuel", "economy", "gas", "mpg", "efficient"],
+                "High price-to-performance value compared to market peers": ["price", "value", "worth", "cheap", "affordable", "deal"]
+            }
+            adv_scores = {}
+            for label, words in adv_keywords.items():
+                score = sum(all_text.count(w) for w in words)
+                if score > 0: adv_scores[label] = score
+            sorted_advs = sorted(adv_scores.items(), key=lambda x: x[1], reverse=True)
+            adv_list = [item[0] for item in sorted_advs]
+            while len(adv_list) < 3:
+                fallback = "Spacious cabin and family-friendly storage components"
+                if fallback not in adv_list: adv_list.append(fallback)
+                else: adv_list.append("Reliable long-term daily commuter performance")
+
+            disadv_keywords = {
+                "Highway cabin noise (wind/road insulation limits)": ["noise", "loud", "wind", "sound", "noisy", "insulation"],
+                "Early brake wear patterns reported by standard city drivers": ["brake", "brakes", "stopping", "wear"],
+                "Suspension stiffness noted on uneven terrains": ["suspension", "bumpy", "rough", "ride", "stiff", "shock"]
+            }
+            disadv_scores = {}
+            for label, words in disadv_keywords.items():
+                score = sum(all_text.count(w) for w in words)
+                if score > 0: disadv_scores[label] = score
+            sorted_disadvs = sorted(disadv_scores.items(), key=lambda x: x[1], reverse=True)
+            disadv_list = [item[0] for item in sorted_disadvs]
+            while len(disadv_list) < 3:
+                fallback = "Standard interior plastic component wear over 5+ years"
+                if fallback not in disadv_list: disadv_list.append(fallback)
+                else: disadv_list.append("Minor electronic sensor reset requirements")
+
+            # --- TEK BAKIŞTA ÜST PANEL (KPI'LAR ve DİNAMİK KUTULAR) ---
+            # Ekranı 3 ana sütuna bölüyoruz: KPI'lar, Avantajlar, Dezavantajlar
+            main_col1, main_col2, main_col3 = st.columns([1, 1.2, 1.2])
+            
+            with main_col1:
+                st.markdown("<h4 style='margin-bottom:10px;'>📊 Performance KPIs</h4>", unsafe_allow_html=True)
+                st.metric(label="Filtered Experiences", value=f"{total_reviews:,}")
+                st.metric(label="Avg User Rating (5)", value=f"{avg_rating:.2f} / 5.0")
+                st.metric(label="Vehicle Advantage Score", value=f"{advantage_score} / 100")
+                
+            with main_col2:
+                st.markdown("<h4 style='margin-bottom:10px; color:#00aad2;'>🟢 Top Advantages</h4>", unsafe_allow_html=True)
+                for i, adv in enumerate(adv_list[:3], 1): 
+                    st.success(f"**{adv}**")
+                    
+            with main_col3:
+                st.markdown("<h4 style='margin-bottom:10px; color:#ff4b4b;'>🔴 Top Disadvantages</h4>", unsafe_allow_html=True)
+                for i, disadv in enumerate(disadv_list[:3], 1): 
+                    st.error(f"**{disadv}**")
+
+            # --- AŞAĞI KAYDIRILDIĞINDA GÖRÜLECEK DETAYLAR ALANI ---
+            st.markdown("<br><hr><br>", unsafe_allow_html=True)
+            st.markdown(f"<h2>🎯 Detailed Executive Summary for {selected_model}</h2>", unsafe_allow_html=True)
+            
+            summary_col1, summary_col2 = st.columns(2)
             with summary_col1:
-                st.markdown("<h3>📊 Customer Sentiment Ratios</h3>", unsafe_allow_html=True)
+                st.markdown("<h3>📊 Detailed Customer Sentiment Ratios</h3>", unsafe_allow_html=True)
                 st.write("Positive Feedback")
                 st.progress(int(pos_rate * 100))
                 st.write("Neutral Feedback")
@@ -181,63 +232,12 @@ try:
                 st.write("Negative Feedback")
                 st.progress(int(neg_rate * 100))
                 
-                st.markdown("<br>", unsafe_allow_html=True)
+            with summary_col2:
                 st.markdown("<h3>🤝 Common User Consensus (Ortak Görüş)</h3>", unsafe_allow_html=True)
                 st.info(f"Analysis for {selected_model} models between {selected_years[0]} and {selected_years[1]} indicates a customer satisfaction rate aligned with an advantage score of {advantage_score}/100.")
 
-            with summary_col2:
-                all_text = " ".join(filtered_df['Review'].astype(str)).lower()
-                
-                # --- DİNAMİK AVANTAJ ANALİZİ (Frekans Tabanlı) ---
-                adv_keywords = {
-                    "Ride Comfort & Interior Ergonomics": ["comfort", "comfortable", "seat", "spacious", "interior", "cabin"],
-                    "Steady Fuel Efficiency over long-term usage": ["mileage", "fuel", "economy", "gas", "mpg", "efficient"],
-                    "High price-to-performance value compared to market peers": ["price", "value", "worth", "cheap", "affordable", "deal"]
-                }
-                
-                adv_scores = {}
-                for label, words in adv_keywords.items():
-                    score = sum(all_text.count(w) for w in words)
-                    if score > 0:
-                        adv_scores[label] = score
-                
-                sorted_advs = sorted(adv_scores.items(), key=lambda x: x[1], reverse=True)
-                adv_list = [item[0] for item in sorted_advs]
-                
-                while len(adv_list) < 3:
-                    fallback = "Spacious cabin and family-friendly storage components"
-                    if fallback not in adv_list: adv_list.append(fallback)
-                    else: adv_list.append("Reliable long-term daily commuter performance")
-
-                # --- DİNAMİK DEZAVANTAJ ANALİZİ (Frekans Tabanlı) ---
-                disadv_keywords = {
-                    "Highway cabin noise (wind/road insulation limits)": ["noise", "loud", "wind", "sound", "noisy", "insulation"],
-                    "Early brake wear patterns reported by standard city drivers": ["brake", "brakes", "stopping", "wear"],
-                    "Suspension stiffness noted on uneven terrains": ["suspension", "bumpy", "rough", "ride", "stiff", "shock"]
-                }
-                
-                disadv_scores = {}
-                for label, words in disadv_keywords.items():
-                    score = sum(all_text.count(w) for w in words)
-                    if score > 0:
-                        disadv_scores[label] = score
-                        
-                sorted_disadvs = sorted(disadv_scores.items(), key=lambda x: x[1], reverse=True)
-                disadv_list = [item[0] for item in sorted_disadvs]
-                
-                while len(disadv_list) < 3:
-                    fallback = "Standard interior plastic component wear over 5+ years"
-                    if fallback not in disadv_list: disadv_list.append(fallback)
-                    else: disadv_list.append("Minor electronic sensor reset requirements")
-
-                st.markdown("<h3>🟢 Dynamic Advantages (Why Buy?)</h3>", unsafe_allow_html=True)
-                for i, adv in enumerate(adv_list[:3], 1): st.success(f"{i}. **{adv}**")
-                
-                st.markdown("<h3>🔴 Dynamic Disadvantages (Why Not Buy?)</h3>", unsafe_allow_html=True)
-                for i, disadv in enumerate(disadv_list[:3], 1): st.error(f"{i}. **{disadv}**")
-
-            st.markdown("---")
-            st.markdown("<h3>💬 Filtered Raw Customer Voices</h3>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<h3>💬 Filtered Raw Customer Voices (Müşteri Yorumları)</h3>", unsafe_allow_html=True)
             for idx, row in filtered_df.head(4).iterrows():
                 status_color = "🟢 Positive" if row['Rating'] >= 4.0 else ("🟡 Neutral" if row['Rating'] == 3.0 else "🔴 Negative")
                 st.markdown(f"""
