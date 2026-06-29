@@ -6,7 +6,7 @@ import os
 # --- Yüksek Hızlı Makine Öğrenmesi ve Grafik Kütüphaneleri ---
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-import plotly.express as px  # Yeni eklenen grafik kütüphanesi
+import plotly.express as px  
 
 # 1. Sayfa Ayarları ve Gelişmiş Karanlık Tema Tasarımı (CSS)
 st.set_page_config(page_title="Hyundai Customer Analytics", page_icon="🚙", layout="wide")
@@ -263,7 +263,7 @@ try:
                 st.markdown("<h3>🤝 Common User Consensus (Ortak Görüş)</h3>", unsafe_allow_html=True)
                 st.info(f"Analysis for {selected_model} models between {selected_years[0]} and {selected_years[1]} indicates a customer satisfaction rate aligned with an advantage score of {advantage_score}/100.")
 
-            # --- YENİ: INTERAKTIF CHART ALANI (PLOTLY KORUNUMU) ---
+            # --- INTERAKTIF CHART ALANI (BOYUTLAR KÜÇÜLTÜLDÜ - height=280 ve height=320) ---
             st.markdown("<br><hr><br>", unsafe_allow_html=True)
             st.markdown("<h2>📈 Advanced Visual Analytics (Görsel Analitik)</h2>", unsafe_allow_html=True)
             
@@ -271,7 +271,6 @@ try:
             
             with chart_col1:
                 st.markdown("### ⭐ Rating Distribution")
-                # Puanların dağılımını gösteren bar grafiği
                 rating_counts = filtered_df['Rating'].value_counts().reset_index()
                 rating_counts.columns = ['Rating', 'Count']
                 rating_counts = rating_counts.sort_values(by='Rating')
@@ -279,21 +278,22 @@ try:
                 fig_rating = px.bar(rating_counts, x='Rating', y='Count', 
                                     labels={'Rating': 'User Rating', 'Count': 'Number of Reviews'},
                                     template='plotly_dark', color_discrete_sequence=['#00aad2'])
-                fig_rating.update_layout(paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
+                # Grafik yüksekliği 280 piksele düşürüldü
+                fig_rating.update_layout(height=280, paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
                 st.plotly_chart(fig_rating, use_container_width=True)
 
             with chart_col2:
                 st.markdown("### 📅 Satisfaction Trend by Years")
-                # Yıllara göre ortalama memnuniyet trendi
                 yearly_trend = filtered_df.groupby('Model_Year')['Rating'].mean().reset_index()
                 
                 fig_trend = px.line(yearly_trend, x='Model_Year', y='Rating', markers=True,
                                     labels={'Model_Year': 'Model Year', 'Rating': 'Average Rating'},
                                     template='plotly_dark', color_discrete_sequence=['#ff4b4b'])
-                fig_trend.update_layout(paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
+                # Grafik yüksekliği 280 piksele düşürüldü
+                fig_trend.update_layout(height=280, paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
                 st.plotly_chart(fig_trend, use_container_width=True)
                 
-            # Model Karşılaştırma Grafiği (Tüm Portföyü Kıyaslar)
+            # Model Karşılaştırma Grafiği
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### 🚗 Model Comparison Across Portfolio (Tüm Modellerin Kıyaslaması)")
             model_comp = df.groupby('Model_Group')['Rating'].mean().reset_index().sort_values(by='Rating', ascending=True)
@@ -301,7 +301,8 @@ try:
             fig_model = px.bar(model_comp, x='Rating', y='Model_Group', orientation='h',
                                labels={'Rating': 'Average Rating', 'Model_Group': 'Vehicle Model'},
                                template='plotly_dark', color='Rating', color_continuous_scale='Blues')
-            fig_model.update_layout(paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
+            # Geniş model kıyaslama grafiği yüksekliği 320 piksele optimize edildi
+            fig_model.update_layout(height=320, paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
             st.plotly_chart(fig_model, use_container_width=True)
 
             # --- Müşteri Yorumları ---
