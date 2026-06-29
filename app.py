@@ -9,11 +9,11 @@ st.set_page_config(page_title="Hyundai Customer Analytics", page_icon="🚙", la
 st.markdown("""
     <style>
     .stApp { background-color: #001529 !important; }
-    [data-testid="stSidebar"] { background-color: #002c5f !important; }
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    [data-testid=\"stSidebar\"] { background-color: #002c5f !important; }
+    [data-testid=\"stSidebar\"] p, [data-testid=\"stSidebar\"] label, [data-testid=\"stSidebar\"] h2, [data-testid=\"stSidebar\"] h3 {
         color: #ffffff !important;
     }
-    div[data-testid="stMetricSimpleWidget"] {
+    div[data-testid=\"stMetricSimpleWidget\"] {
         background-color: #002140 !important;
         border: 1px solid #003a70;
         padding: 20px;
@@ -21,8 +21,8 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         border-left: 6px solid #00aad2;
     }
-    div[data-testid="stMetricSimpleWidget"] label { color: #a3b8cc !important; font-weight: bold; }
-    div[data-testid="stMetricSimpleWidget"] div[data-testid="stMetricValue"] { color: #ffffff !important; }
+    div[data-testid=\"stMetricSimpleWidget\"] label { color: #a3b8cc !important; font-weight: bold; }
+    div[data-testid=\"stMetricSimpleWidget\"] div[data-testid=\"stMetricValue\"] { color: #ffffff !important; }
     
     .insight-card {
         background-color: #002140 !important;
@@ -48,11 +48,11 @@ st.markdown("""
     }
     
     /* Sekme (Tabs) başlık renklerini beyaz yapma */
-    button[data-baseweb="tab"] p {
+    button[data-baseweb=\"tab\"] p {
         color: #a3b8cc !important;
         font-size: 16px !important;
     }
-    button[aria-selected="true"] p {
+    button[aria-selected=\"true\"] p {
         color: #00aad2 !important;
         font-weight: bold !important;
     }
@@ -97,10 +97,10 @@ def load_data():
 try:
     df = load_data()
 
-    # 4. Sol Menü - Logo ve Filtreler
-    if os.path.exists('hyundai_logo.jpg'): st.sidebar.image('hyundai_logo.jpg', use_container_width=True)
-    elif os.path.exists('hyundai_logo.jpeg'): st.sidebar.image('hyundai_logo.jpeg', use_container_width=True)
-    elif os.path.exists('hyundai_logo.png'): st.sidebar.image('hyundai_logo.png', use_container_width=True)
+    # 4. Sol Menü - Logo ve Filtreler (Küçük Boyut Ayarı Yapıldı)
+    if os.path.exists('hyundai_logo.jpg'): st.sidebar.image('hyundai_logo.jpg', width=150)
+    elif os.path.exists('hyundai_logo.jpeg'): st.sidebar.image('hyundai_logo.jpeg', width=150)
+    elif os.path.exists('hyundai_logo.png'): st.sidebar.image('hyundai_logo.png', width=150)
     else: st.sidebar.markdown("<h2 style='color: #00aad2; text-align: center;'>HYUNDAI</h2>", unsafe_allow_html=True)
         
     st.sidebar.markdown("<br>", unsafe_allow_html=True)
