@@ -3,12 +3,12 @@ import streamlit as st
 import re
 import os
 
-# --- Yüksek Hızlı Makine Öğrenmesi ve Grafik Kütüphaneleri ---
+# --- High-Speed Machine Learning & Visualization Libraries ---
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 import plotly.express as px  
 
-# 1. Sayfa Ayarları ve Gelişmiş Karanlık Tema Tasarımı (CSS)
+# 1. Page Configuration & Advanced Dark Theme Design (CSS)
 st.set_page_config(page_title="Hyundai Customer Analytics", page_icon="🚙", layout="wide")
 
 st.markdown("""
@@ -53,7 +53,7 @@ st.markdown("""
         border: 1px solid #00aad2 !important;
     }
     
-    /* Sekme (Tabs) başlık renkleri */
+    /* Tab Headers Custom Style */
     button[data-baseweb="tab"] p {
         color: #a3b8cc !important;
         font-size: 16px !important;
@@ -63,7 +63,7 @@ st.markdown("""
         font-weight: bold !important;
     }
     
-    /* Logoyu ortalamak için kapsayıcı */
+    /* Logo Container for Centering */
     .logo-container {
         display: flex;
         justify-content: center;
@@ -74,12 +74,12 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 2. Üst Banner Alanı
+# 2. Upper Banner Area
 st.markdown("<h1 style='color: #ffffff; font-family: Arial, sans-serif; margin-bottom: 0;'>🚙 HYUNDAI CUSTOMER INSIGHTS</h1>", unsafe_allow_html=True)
 st.markdown("<p style='color: #00aad2; margin-top: 5px; font-size: 14px;'>Data-Driven Vehicle Evaluation & Performance Platform</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# 3. Veri Yükleme ve Akıllı Ön İşleme Fonksiyonu
+# 3. Data Loading & Intelligent Preprocessing Function
 @st.cache_data
 def load_data():
     df = pd.read_csv('Scraped_Car_Review_hyundai.csv', lineterminator='\n')
@@ -109,7 +109,7 @@ def load_data():
     df['Model_Group'] = df['Vehicle_Title'].apply(extract_model)
     return df
 
-# --- Mevcut Veri Setiyle Makine Öğrenmesi Modelini Arka Planda Eğiten Fonksiyon ---
+# --- Background Machine Learning Model Training Function ---
 @st.cache_resource
 def train_fast_model(_df):
     train_df = _df.dropna(subset=['Review', 'Rating']).copy()
@@ -128,7 +128,7 @@ try:
     df = load_data()
     vectorizer, ml_model = train_fast_model(df) 
 
-    # 4. Sol Menü - Logo ve Filtreler
+    # 4. Sidebar - Logo and Filters
     with st.sidebar:
         st.markdown('<div class="logo-container">', unsafe_allow_html=True)
         if os.path.exists('hyundai_logo.jpg'): st.image('hyundai_logo.jpg', width=150)
@@ -147,7 +147,7 @@ try:
         
         search_query = st.text_input("🔍 Search Keyword (e.g. engine, fuel, seat)", "")
 
-        st.markdown("### ⚡ Quick Topic Filters")
+        st.sidebar.markdown("### ⚡ Quick Topic Filters")
         col_b1, col_b2 = st.columns(2)
         with col_b1:
             if st.button("🔧 Engine"): search_query = "engine"
@@ -156,7 +156,7 @@ try:
             if st.button("🛋️ Comfort"): search_query = "comfort"
             if st.button("⛽ Fuel"): search_query = "fuel"
 
-    # Filtreleri Uygulama
+    # Apply Filters
     filtered_df = df[
         (df['Model_Group'] == selected_model) & 
         (df['Model_Year'] >= selected_years[0]) & 
@@ -165,10 +165,10 @@ try:
     if search_query:
         filtered_df = filtered_df[filtered_df['Review'].str.contains(search_query, case=False, na=False)]
 
-    # 5. SEKMELİ YAPI KURULUMU (Tabs)
+    # 5. Tab Layout Setup
     tab1, tab2 = st.tabs(["📊 Model Performance Dashboard", "🤖 Live AI Sentiment Predictor"])
 
-    # --- SEKME 1: DASHBOARD ---
+    # --- TAB 1: DASHBOARD ---
     with tab1:
         total_reviews = len(filtered_df)
         if total_reviews > 0:
@@ -186,7 +186,7 @@ try:
         if total_reviews > 0:
             all_text = " ".join(filtered_df['Review'].astype(str)).lower()
             
-            # --- DİNAMİK AVANTAJ HESAPLAMA MANTIĞI ---
+            # --- Dynamic Advantages Analytics ---
             adv_keywords = {
                 "Ride Comfort & Interior Ergonomics": ["comfort", "comfortable", "seat", "spacious", "interior", "cabin"],
                 "Steady Fuel Efficiency over long-term usage": ["mileage", "fuel", "economy", "gas", "mpg", "efficient"],
@@ -203,7 +203,7 @@ try:
                 if fallback not in adv_list: adv_list.append(fallback)
                 else: adv_list.append("Reliable long-term daily commuter performance")
 
-            # --- DİNAMİK DEZAVANTAJ HESAPLAMA MANTIĞI ---
+            # --- Dynamic Disadvantages Analytics ---
             disadv_keywords = {
                 "Highway cabin noise (wind/road insulation limits)": ["noise", "loud", "wind", "sound", "noisy", "insulation"],
                 "Early brake wear patterns reported by standard city drivers": ["brake", "brakes", "stopping", "wear", "squeak"],
@@ -221,14 +221,14 @@ try:
             
             fallbacks = [
                 f"Minor tech or component wear patterns reported in older {selected_model} models",
-                f"Standard cabin insulation updates suggested by long-term {selected_model} models",
+                f"Standard cabin insulation updates suggested by long-term {selected_model} owners",
                 f"Routine maintenance costs aligned with mid-size vehicle segment standards"
             ]
             for fallback in fallbacks:
                 if len(disadv_list) >= 3: break
                 if fallback not in disadv_list: disadv_list.append(fallback)
 
-            # --- TEK BAKIŞTA ÜST PANEL ---
+            # --- At-A-Glance Metric Panel ---
             main_col1, main_col2, main_col3 = st.columns([1, 1.2, 1.2])
             
             with main_col1:
@@ -245,7 +245,7 @@ try:
                 st.markdown("<h4 style='margin-bottom:10px; color:#ff4b4b;'>🔴 Top Disadvantages</h4>", unsafe_allow_html=True)
                 for i, disadv in enumerate(disadv_list[:3], 1): st.error(f"**{disadv}**")
 
-            # --- AŞAĞI KAYDIRILDIĞINDA GÖRÜLECEK DETAYLAR ALANI ---
+            # --- Detailed Breakdown Below the Fold ---
             st.markdown("<br><hr><br>", unsafe_allow_html=True)
             st.markdown(f"<h2>🎯 Detailed Executive Summary for {selected_model}</h2>", unsafe_allow_html=True)
             
@@ -260,12 +260,12 @@ try:
                 st.progress(int(neg_rate * 100))
                 
             with summary_col2:
-                st.markdown("<h3>🤝 Common User Consensus (Ortak Görüş)</h3>", unsafe_allow_html=True)
+                st.markdown("<h3>🤝 Common User Consensus</h3>", unsafe_allow_html=True)
                 st.info(f"Analysis for {selected_model} models between {selected_years[0]} and {selected_years[1]} indicates a customer satisfaction rate aligned with an advantage score of {advantage_score}/100.")
 
-            # --- INTERAKTIF CHART ALANI (BOYUTLAR KÜÇÜLTÜLDÜ - height=280 ve height=320) ---
+            # --- Interactive Visual Analytics Charts ---
             st.markdown("<br><hr><br>", unsafe_allow_html=True)
-            st.markdown("<h2>📈 Advanced Visual Analytics (Görsel Analitik)</h2>", unsafe_allow_html=True)
+            st.markdown("<h2>📈 Advanced Visual Analytics</h2>", unsafe_allow_html=True)
             
             chart_col1, chart_col2 = st.columns(2)
             
@@ -278,7 +278,6 @@ try:
                 fig_rating = px.bar(rating_counts, x='Rating', y='Count', 
                                     labels={'Rating': 'User Rating', 'Count': 'Number of Reviews'},
                                     template='plotly_dark', color_discrete_sequence=['#00aad2'])
-                # Grafik yüksekliği 280 piksele düşürüldü
                 fig_rating.update_layout(height=280, paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
                 st.plotly_chart(fig_rating, use_container_width=True)
 
@@ -289,25 +288,23 @@ try:
                 fig_trend = px.line(yearly_trend, x='Model_Year', y='Rating', markers=True,
                                     labels={'Model_Year': 'Model Year', 'Rating': 'Average Rating'},
                                     template='plotly_dark', color_discrete_sequence=['#ff4b4b'])
-                # Grafik yüksekliği 280 piksele düşürüldü
                 fig_trend.update_layout(height=280, paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
                 st.plotly_chart(fig_trend, use_container_width=True)
                 
-            # Model Karşılaştırma Grafiği
+            # Portfolio Model Comparison Chart
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("### 🚗 Model Comparison Across Portfolio (Tüm Modellerin Kıyaslaması)")
+            st.markdown("### 🚗 Model Comparison Across Portfolio")
             model_comp = df.groupby('Model_Group')['Rating'].mean().reset_index().sort_values(by='Rating', ascending=True)
             
             fig_model = px.bar(model_comp, x='Rating', y='Model_Group', orientation='h',
                                labels={'Rating': 'Average Rating', 'Model_Group': 'Vehicle Model'},
                                template='plotly_dark', color='Rating', color_continuous_scale='Blues')
-            # Geniş model kıyaslama grafiği yüksekliği 320 piksele optimize edildi
             fig_model.update_layout(height=320, paper_bgcolor='rgba(0,21,41,1)', plot_bgcolor='rgba(0,21,41,1)', margin=dict(l=20, r=20, t=20, b=20))
             st.plotly_chart(fig_model, use_container_width=True)
 
-            # --- Müşteri Yorumları ---
+            # --- Customer Voices ---
             st.markdown("<br><hr><br>", unsafe_allow_html=True)
-            st.markdown("<h3>💬 Filtered Raw Customer Voices (Müşteri Yorumları)</h3>", unsafe_allow_html=True)
+            st.markdown("<h3>💬 Filtered Raw Customer Voices</h3>", unsafe_allow_html=True)
             for idx, row in filtered_df.head(4).iterrows():
                 status_color = "🟢 Positive" if row['Rating'] >= 4.0 else ("🟡 Neutral" if row['Rating'] == 3.0 else "🔴 Negative")
                 st.markdown(f"""
@@ -320,7 +317,7 @@ try:
         else:
             st.warning("⚠️ No reviews found matching the selected filters.")
 
-    # --- SEKME 2: YÜKSEK HIZLI MAKİNE ÖĞRENMESİ TAHMİN MOTORU ---
+    # --- TAB 2: LIVE ML PREDICTION ENGINE ---
     with tab2:
         st.markdown("<h2>🤖 Live Sentiment Classification Engine (TF-IDF + Logistic Regression)</h2>", unsafe_allow_html=True)
         st.markdown("<p style='color: #a3b8cc;'>Type any English customer review below to test the ultra-fast statistical model in real-time.</p>", unsafe_allow_html=True)
