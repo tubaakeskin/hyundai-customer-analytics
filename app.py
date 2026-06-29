@@ -3,9 +3,9 @@ import streamlit as st
 import re
 import os
 
-# --- YENİ: NLP Modeli için gerekli kütüphaneyi çağırıyoruz ---
-# Not: Eğer hata alırsan GitHub'daki requirements.txt dosyana 'transformers' ve 'torch' eklemelisin.
-from transformers import pipeline
+# --- Yüksek Hızlı Makine Öğrenmesi için Gerekli Kütüphaneler ---
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
 
 # 1. Sayfa Ayarları ve Gelişmiş Karanlık Tema Tasarımı (CSS)
 st.set_page_config(page_title="Hyundai Customer Analytics", page_icon="🚙", layout="wide")
@@ -108,15 +108,24 @@ def load_data():
     df['Model_Group'] = df['Vehicle_Title'].apply(extract_model)
     return df
 
-# --- YENİ: NLP Modelini Cache'leyerek Yükleyen Fonksiyon ---
+# --- Mevcut Veri Setiyle Makine Öğrenmesi Modelini Arka Planda Eğiten Fonksiyon ---
 @st.cache_resource
-def load_nlp_model():
-    # DistilBERT tabanlı hafif ve çok güçlü bir duygu analizi modeli çağırıyoruz
-    return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+def train_fast_model(_df):
+    train_df = _df.dropna(subset=['Review', 'Rating']).copy()
+    train_df['Label'] = train_df['Rating'].apply(lambda x: 1 if x >= 4.0 else 0)
+    
+    vectorizer = TfidfVectorizer(max_features=2500, stop_words='english', ngram_range=(1,2))
+    X = vectorizer.fit_transform(train_df['Review'])
+    y = train_df['Label']
+    
+    model = LogisticRegression(C=1.0, max_iter=200)
+    model.fit(X, y)
+    
+    return vectorizer, model
 
 try:
     df = load_data()
-    classifier = load_nlp_model() # Modeli hafızaya alıyoruz
+    vectorizer, ml_model = train_fast_model(df) 
 
     # 4. Sol Menü - Logo ve Filtreler
     with st.sidebar:
@@ -176,7 +185,7 @@ try:
         if total_reviews > 0:
             all_text = " ".join(filtered_df['Review'].astype(str)).lower()
             
-            # --- DİNAMİK AVANTAJ / DEZAVANTAJ HESAPLAMA MANTIĞI ---
+            # --- DİNAMİK AVANTAJ HESAPLAMA MANTIĞI ---
             adv_keywords = {
                 "Ride Comfort & Interior Ergonomics": ["comfort", "comfortable", "seat", "spacious", "interior", "cabin"],
                 "Steady Fuel Efficiency over long-term usage": ["mileage", "fuel", "economy", "gas", "mpg", "efficient"],
@@ -193,10 +202,14 @@ try:
                 if fallback not in adv_list: adv_list.append(fallback)
                 else: adv_list.append("Reliable long-term daily commuter performance")
 
+            # --- DİNAMİK DEZAVANTAJ HESAPLAMA MANTIĞI ---
             disadv_keywords = {
                 "Highway cabin noise (wind/road insulation limits)": ["noise", "loud", "wind", "sound", "noisy", "insulation"],
-                "Early brake wear patterns reported by standard city drivers": ["brake", "brakes", "stopping", "wear"],
-                "Suspension stiffness noted on uneven terrains": ["suspension", "bumpy", "rough", "ride", "stiff", "shock"]
+                "Early brake wear patterns reported by standard city drivers": ["brake", "brakes", "stopping", "wear", "squeak"],
+                "Suspension stiffness noted on uneven terrains": ["suspension", "bumpy", "rough", "ride", "stiff", "shock"],
+                "Reported interior trim or plastic component wear": ["plastic", "trim", "rattle", "dashboard", "scratch", "interior"],
+                "Electronic or sensor performance fluctuations": ["sensor", "screen", "display", "bluetooth", "radio", "electronic", "light"],
+                "Unexpected maintenance or component reliability issues": ["repair", "fix", "broke", "fail", "problem", "engine", "transmission"]
             }
             disadv_scores = {}
             for label, words in disadv_keywords.items():
@@ -204,10 +217,15 @@ try:
                 if score > 0: disadv_scores[label] = score
             sorted_disadvs = sorted(disadv_scores.items(), key=lambda x: x[1], reverse=True)
             disadv_list = [item[0] for item in sorted_disadvs]
-            while len(disadv_list) < 3:
-                fallback = "Standard interior plastic component wear over 5+ years"
+            
+            fallbacks = [
+                f"Minor tech or component wear patterns reported in older {selected_model} models",
+                f"Standard cabin insulation updates suggested by long-term {selected_model} owners",
+                f"Routine maintenance costs aligned with mid-size vehicle segment standards"
+            ]
+            for fallback in fallbacks:
+                if len(disadv_list) >= 3: break
                 if fallback not in disadv_list: disadv_list.append(fallback)
-                else: disadv_list.append("Minor electronic sensor reset requirements")
 
             # --- TEK BAKIŞTA ÜST PANEL ---
             main_col1, main_col2, main_col3 = st.columns([1, 1.2, 1.2])
@@ -258,31 +276,29 @@ try:
         else:
             st.warning("⚠️ No reviews found matching the selected filters.")
 
-    # --- SEKME 2: YENİLENEN GERÇEK NLP TAHMİN MOTORU ---
+    # --- SEKME 2: YÜKSEK HIZLI MAKİNE ÖĞRENMESİ TAHMİN MOTORU ---
     with tab2:
-        st.markdown("<h2>🤖 Live Sentiment Classification Engine (BERT tabanlı)</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #a3b8cc;'>Type any English customer review below to test the **Transformer NLP model** in real-time.</p>", unsafe_allow_html=True)
+        st.markdown("<h2>🤖 Live Sentiment Classification Engine (TF-IDF + Logistic Regression)</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #a3b8cc;'>Type any English customer review below to test the ultra-fast statistical model in real-time.</p>", unsafe_allow_html=True)
         
         user_input = st.text_area("✍️ Enter Customer Review (In English):", "The handling of this vehicle is smooth and the interior is incredibly comfortable, but the engine noise at high speeds is slightly annoying.")
         
         if user_input:
             st.markdown("### 🔍 Model Analysis Results")
             
-            # NLP model tahmini gerçekleştiriliyor
-            with st.spinner("NLP modeli metni analiz ediyor..."):
-                result = classifier(user_input)[0]
-                label = result['label']      # POSITIVE veya NEGATIVE döner
-                confidence = result['score']  # Güven skoru (0.0 - 1.0 arası)
+            input_vector = vectorizer.transform([user_input])
+            prediction = ml_model.predict(input_vector)[0]
+            probabilities = ml_model.predict_proba(input_vector)[0]
+            confidence = probabilities[prediction]
             
-            # Çıktıyı görselleştirme
-            if label == "POSITIVE":
+            if prediction == 1:
                 st.success(f"🟢 **Predicted Sentiment: POSITIVE** (Confidence Score: %{confidence*100:.2f})")
             else:
                 st.error(f"🔴 **Predicted Sentiment: NEGATIVE** (Confidence Score: %{confidence*100:.2f})")
                 
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("##### 💡 Industrial Engineering & Data Science Note:")
-            st.info("This prototype utilizes **DistilBERT (SST-2)** via Hugging Face. Unlike rule-based regex models, it contextualizes linguistic nuances, negation structures (e.g., 'not good'), and semantic dependencies instantaneously.")
+            st.info("This prototype utilizes a **TF-IDF + Logistic Regression** model pipeline trained directly on the vehicle dataset. By reducing neural network overhead, it achieves instant prediction speed suitable for agile decision-making systems.")
 
 except FileNotFoundError:
     st.error("Please ensure 'Scraped_Car_Review_hyundai.csv' is in the same directory as this script.")
