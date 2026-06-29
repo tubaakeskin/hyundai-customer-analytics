@@ -1,18 +1,134 @@
-# 🚙 Hyundai Customer Insights & QA Analytics Pro
+# 🚙 Hyundai Customer Insights & QA Analytics
 
-This project is a **Customer Experience (CX) and Quality Assurance Decision Support System** developed to track chronic production defects, customer satisfaction trends, and model performances by analyzing **more than 8,200 real customer feedbacks** belonging to Hyundai models (Elantra, Accent, Tucson, Sonata, Santa Fe, Azera).
+A **Customer Experience and Quality Assurance Decision Support System** built to analyze over **8,200 real customer reviews** across major Hyundai models. The platform identifies satisfaction trends, common complaint patterns, and model-level performance differences through an interactive Streamlit dashboard.
 
-## 🚀 Live Application
-Test the application directly in your browser: [Hyundai Customer Analytics App](https://hyundai-customer-analytics.streamlit.app/)
+---
 
-## 🎯 Key Features & Project Highlights
+## 🚀 Live Demo
 
-*   **Scroll-Free Executive Summary:** Access all critical metrics, pros, cons, and strategic action plans on a single screen without needing to scroll down.
-*   **QA Alert (Quality Assurance Warning):** The system automatically triggers a Quality Assurance alert and requests a root-cause analysis whenever the negative feedback rate exceeds the 20% threshold within the filtered dataset.
-*   **Lightweight Morphological Pattern Classifier:** A smart, tailored algorithm designed to bypass heavy libraries (~2 GB). It focuses on word roots and suffixes to handle negation (such as detecting Turkish negative structures like "-medim", "-madı", "değil", "yok") within milliseconds, while successfully filtering out random/meaningless character strings.
-*   **Advanced Data Optimization:** Real-time dynamic filtering and comment-sorting options based on manufacturing year, vehicle model, and raw keyword searches.
+👉 [hyundai-customer-analytics.streamlit.app](https://hyundai-customer-analytics.streamlit.app/)
 
-## 🛠️ Tech Stack & Tools
-*   **Frontend & Deployment:** Streamlit
-*   **Data Manipulation & Analytics:** Python (Pandas, NumPy)
-*   **Text Processing:** Custom Morphological NLP Logic / Regular Expressions (Regex)
+---
+
+## 📌 Project Overview
+
+This project was developed to simulate a real-world QA analytics workflow:
+
+- Scrape and preprocess raw customer review data
+- Classify sentiment using a machine learning pipeline trained on the dataset
+- Surface actionable insights through a filterable, interactive dashboard
+- Flag models that exceed a **20% negative feedback threshold** as QA alerts
+
+The target use case is a product or quality team that needs a quick, data-driven view of customer pain points by model and year — without requiring a data scientist to run queries manually.
+
+---
+
+## 🎯 Key Features
+
+### 📊 Model Performance Dashboard
+- Filter reviews by **vehicle model**, **manufacturing year range**, and **keyword search**
+- KPI panel showing total review count, average rating, and a composite advantage score
+- Dynamically generated **Top Advantages** and **Top Disadvantages** based on keyword frequency in filtered reviews
+- **QA Alert** is triggered automatically when the negative feedback rate (ratings ≤ 2.5) exceeds 20% of the filtered dataset
+
+### 📈 Visual Analytics
+- Rating distribution bar chart per model
+- Year-over-year satisfaction trend line
+- Cross-model average rating comparison (horizontal bar)
+
+### 🤖 Live Sentiment Predictor (Tab 2)
+- User can type any English review text and receive an instant positive/negative classification
+- Powered by a **TF-IDF + Logistic Regression** pipeline trained on the existing review dataset
+- Displays prediction confidence score
+
+### 💬 Filtered Review Browser
+- Displays up to 4 raw customer reviews matching the active filters
+- Color-coded by sentiment (positive / neutral / negative)
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Tools |
+|---|---|
+| Dashboard & UI | Streamlit |
+| Data Processing | Python, Pandas, NumPy |
+| Text Vectorization | scikit-learn (TfidfVectorizer) |
+| Sentiment Model | scikit-learn (LogisticRegression) |
+| Visualization | Plotly Express |
+| Pattern Matching | Python re (Regular Expressions) |
+
+---
+
+## 📁 Project Structure
+
+```
+hyundai-customer-analytics/
+├── app.py                          # Main Streamlit application
+├── Scraped_Car_Review_hyundai.csv  # Dataset (8,200+ customer reviews)
+├── hyundai_logo.jpg                # Brand asset for sidebar
+├── requirements.txt                # Python dependencies
+└── README.md
+```
+
+---
+
+## ⚙️ How It Works
+
+### Data Pipeline
+1. CSV is loaded and cached with `@st.cache_data`
+2. Model year is extracted from the `Vehicle_Title` field using regex
+3. Vehicle model is classified into groups (Elantra, Accent, Tucson, Sonata, Santa Fe, Azera) via substring matching
+
+### Sentiment Analysis
+The ML model is trained at startup using `@st.cache_resource`:
+- All reviews with a valid rating are used as training data
+- Labels are binary: **Positive (rating ≥ 4.0)** vs **Negative (rating < 4.0)**
+- Text is vectorized with TF-IDF (top 2,500 features, unigrams + bigrams)
+- A Logistic Regression classifier is fitted on this vectorized data
+- The same pipeline is used for real-time prediction in Tab 2
+
+> **Note:** This model is trained and evaluated on the same dataset without a held-out test split. Confidence scores reflect in-distribution performance. A proper train/test split would be the next step for production use.
+
+### Keyword-Based Advantage/Disadvantage Detection
+The dashboard's pros/cons cards are generated by counting how often topic-related keywords appear in the combined text of filtered reviews. Categories with the highest keyword frequency are surfaced as top advantages or disadvantages. This is a **frequency-based heuristic**, not a deep NLP model.
+
+---
+
+## 📦 Installation & Local Run
+
+```bash
+git clone https://github.com/tubaakeskin/hyundai-customer-analytics.git
+cd hyundai-customer-analytics
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Python 3.9+ recommended.
+
+---
+
+## 📊 Dataset
+
+- **Source:** Web-scraped customer reviews for Hyundai vehicles
+- **Size:** 8,200+ reviews
+- **Models covered:** Elantra, Accent, Tucson, Sonata, Santa Fe, Azera
+- **Fields used:** `Vehicle_Title`, `Review_Title`, `Review`, `Rating`
+- **Language:** English
+
+---
+
+## 🔮 Possible Future Improvements
+
+- Add proper train/test split and display model accuracy metrics on the dashboard
+- Integrate a pre-trained transformer model (e.g. `distilbert-base-uncased-finetuned-sst-2-english`) for more accurate sentiment classification
+- Add word cloud visualization for filtered review text
+- Export filtered data as CSV from the sidebar
+- Add complaint category tagging (e.g. engine, interior, fuel, transmission) as structured labels
+
+---
+
+## 👤 Author
+
+**Tuba Keşkin**
+[GitHub](https://github.com/tubaakeskin)
