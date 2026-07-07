@@ -130,5 +130,5 @@ Python 3.9+ recommended.
 
 ## 👤 Author
 
-**Tuba Keşkin**
+**Tuba Keskin**
 [GitHub](https://github.com/tubaakeskin)
